@@ -1,8 +1,8 @@
 import { DATA } from "@/data";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ellipsis } from "lucide-react-native";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TodoItem = () => {
@@ -10,18 +10,14 @@ const TodoItem = () => {
     const [isToggle, setIsToggle] = useState(false);
     const item = DATA.find((item) => item.id === id);
 
+    const handleDelete = (todoId: string) => {
+        console.log("Delete:", todoId);
+        setIsToggle(false);
+        router.push("/");
+    };
+
     return (
-        <SafeAreaView
-            className={`p-4 flex-1 ${
-                item?.status === "Completed"
-                    ? "bg-green-100"
-                    : item?.status === "In Progress"
-                    ? "bg-orange-100"
-                    : item?.status === "Pending"
-                    ? "bg-slate-100"
-                    : "bg-white"
-            }`}
-        >
+        <SafeAreaView className="p-4 flex-1 bg-slate-100">
             {item ? (
                 <View>
                     <View className="flex flex-row justify-between items-center border-b border-slate-500 pb-2">
@@ -40,11 +36,21 @@ const TodoItem = () => {
                                 onPress={() => setIsToggle((prev) => !prev)}
                             />
                             {isToggle && (
-                                <View className="absolute top-6 right-0 flex p-4 bg-red-300 rounded-md shadow-lg z-10">
-                                    <Text className="text-black">Edit</Text>
-                                    <Text className="text-black mt-2">
-                                        Delete
-                                    </Text>
+                                <View className="absolute top-7 right-5 w-32 space-y-6 p-4 bg-slate-900 border rounded-md shadow-lg z-10">
+                                    <TouchableOpacity
+                                        onPress={() => router.push("/editTodo")}
+                                    >
+                                        <Text className="text-white text-xl">
+                                            Edit
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => handleDelete(item.id)}
+                                    >
+                                        <Text className="text-red-500 text-xl">
+                                            Delete
+                                        </Text>
+                                    </TouchableOpacity>
                                 </View>
                             )}
                         </View>
