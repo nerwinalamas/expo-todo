@@ -1,15 +1,14 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-    Button,
-    Pressable,
     ScrollView,
     Text,
     TextInput,
+    TouchableOpacity,
     View,
 } from "react-native";
 import { Plus } from "lucide-react-native";
 import { DATA } from "@/data";
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 
 const App = () => {
@@ -20,50 +19,65 @@ const App = () => {
         if (isSearching.trim() === "") {
             setFilteredData(DATA);
         } else {
-            const result = DATA.filter((item) => 
+            const result = DATA.filter((item) =>
                 item.title.toLowerCase().includes(isSearching.toLowerCase())
             );
             setFilteredData(result);
         }
     };
 
+    const handleInputChange = (newText: string) => {
+        setIsSearching(newText);
+
+        if (newText.trim() === "") {
+            setFilteredData(DATA);
+        }
+    };
+
     return (
         <SafeAreaView className="relative p-4 flex-1 flex flex-col justify-start items-center gap-2 bg-slate-200">
-            <Pressable
+            <TouchableOpacity
                 className="absolute right-5 bottom-10 z-10 p-4 rounded-full bg-yellow-400"
-                onPress={() => console.log("press")}
+                onPress={() => router.push("/createTodo")}
             >
                 <Text>
-                    <Plus color="white" size={30} />
+                    <Plus color="white" size={25} />
                 </Text>
-            </Pressable>
+            </TouchableOpacity>
 
             <View className="w-full px-2 flex flex-row items-center space-x-2">
                 <TextInput
                     placeholder="Search Todo"
                     value={isSearching}
-                    onChangeText={newText => setIsSearching(newText)}
+                    onChangeText={handleInputChange}
                     className="grow p-3 rounded-md bg-slate-100"
                 />
-                <View>
-                    <Button
-                        title="Search"
-                        color="#facc15"
-                        onPress={handleSearch}
-                    />
-                </View>
+                <TouchableOpacity
+                    onPress={handleSearch}
+                    className="p-4 rounded-md bg-yellow-400"
+                >
+                    <Text className="text-white">Search</Text>
+                </TouchableOpacity>
             </View>
 
             <View className="flex-1 w-full">
                 <ScrollView className="p-2 flex flex-col">
                     {filteredData.map((d) => (
-                        <Link
-                            href={`/${d.id}`}
+                        <TouchableOpacity
                             key={d.id}
+                            onPress={() => router.push(`/${d.id}`)}
                             className="p-5 mb-3 rounded-md bg-slate-100"
                         >
-                            <Text className={`${d.status === "Completed" ? "line-through" : ""}`}>{d.title}</Text>
-                        </Link>
+                            <Text
+                                className={`${
+                                    d.status === "Completed"
+                                        ? "line-through"
+                                        : ""
+                                }`}
+                            >
+                                {d.title}
+                            </Text>
+                        </TouchableOpacity>
                     ))}
                 </ScrollView>
             </View>
