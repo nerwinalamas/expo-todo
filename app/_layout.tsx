@@ -34,9 +34,13 @@ export default function RootLayout() {
     return (
         <SafeAreaProvider>
             <ThemeProvider
-                value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+                value={colorScheme === "light" ? DarkTheme : DefaultTheme}
             >
                 <Stack>
+                    <Stack.Screen
+                        name="(auth)"
+                        options={{ headerShown: false }}
+                    />
                     <Stack.Screen
                         name="(todo)"
                         options={{ headerShown: false }}
