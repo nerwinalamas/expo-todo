@@ -6,14 +6,17 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { Plus } from "lucide-react-native";
+import { Ellipsis, Plus } from "lucide-react-native";
 import { DATA } from "@/data";
 import { router } from "expo-router";
 import { useState } from "react";
+import { getAuth, signOut } from "firebase/auth";
+import { app } from "@/config/firebaseConfig";
 
-const App = () => {
+const TodoList = () => {
     const [isSearching, setIsSearching] = useState("");
     const [filteredData, setFilteredData] = useState(DATA);
+    const [isToggle, setIsToggle] = useState(false);
 
     const handleSearch = () => {
         if (isSearching.trim() === "") {
@@ -34,8 +37,33 @@ const App = () => {
         }
     };
 
+    const handleLogout = async () => {
+        const auth = getAuth(app);
+        await signOut(auth);
+        router.push("/");
+    };
+
     return (
         <SafeAreaView className="relative p-4 flex-1 flex flex-col justify-start items-center gap-2 bg-slate-200">
+            <View className="w-full px-2 flex-row justify-between items-center">
+                <Text className="text-2xl font-bold">Todo</Text>
+                <View className="relative">
+                    <Ellipsis
+                        color="black"
+                        size={24}
+                        onPress={() => setIsToggle((prev) => !prev)}
+                    />
+                    {isToggle && (
+                        <View className="absolute top-7 right-5 w-32 space-y-6 p-4 bg-slate-900 border rounded-md shadow-lg z-10">
+                            <TouchableOpacity onPress={handleLogout}>
+                                <Text className="text-white text-xl">
+                                    Logout
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
+            </View>
             <TouchableOpacity
                 className="absolute right-5 bottom-10 z-10 p-4 rounded-full bg-yellow-400"
                 onPress={() => router.push("/createTodo")}
@@ -85,4 +113,4 @@ const App = () => {
     );
 };
 
-export default App;
+export default TodoList;
