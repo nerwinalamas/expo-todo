@@ -13,7 +13,7 @@ const TodoItem = () => {
     const handleDelete = (todoId: string) => {
         console.log("Delete:", todoId);
         setIsToggle(false);
-        router.push("/");
+        router.replace("/todoList");
     };
 
     return (

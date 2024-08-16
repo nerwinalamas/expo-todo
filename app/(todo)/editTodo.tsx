@@ -25,7 +25,7 @@ const EditTodo = () => {
         console.log("Description:", editDescription);
         console.log("Status:", editStatus);
 
-        router.push("/");
+        router.replace("/todoList");
     };
 
     return (
@@ -76,7 +76,7 @@ const EditTodo = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    onPress={() => router.push("/")}
+                    onPress={() => router.replace("/todoList")}
                     className="p-4 rounded-lg bg-slate-300"
                 >
                     <Text className="text-center">Cancel</Text>
