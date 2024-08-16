@@ -45,6 +45,10 @@ export default function RootLayout() {
                         name="(todo)"
                         options={{ headerShown: false }}
                     />
+                    <Stack.Screen
+                        name="(account)"
+                        options={{ headerShown: false }}
+                    />
                 </Stack>
             </ThemeProvider>
         </SafeAreaProvider>
