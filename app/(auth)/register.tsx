@@ -3,8 +3,8 @@ import { router } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { app } from "@/config/firebaseConfig";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/config/firebaseConfig";
 
 const Register = () => {
     const {
@@ -24,7 +24,6 @@ const Register = () => {
         }
 
         try {
-            const auth = getAuth(app);
             const response = await createUserWithEmailAndPassword(
                 auth,
                 email,
@@ -32,7 +31,7 @@ const Register = () => {
             );
 
             Alert.alert("Registration Successfully");
-            router.push("/");
+            router.replace("/");
         } catch (error) {
             const errorMessage = (error as Error).message;
             Alert.alert("Error in Registration: ", errorMessage);
@@ -97,7 +96,7 @@ const Register = () => {
                         Register
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => router.push("/")}>
+                <TouchableOpacity onPress={() => router.replace("/")}>
                     <Text className="font-medium text-center">
                         Already have an account?{" "}
                         <Text className="text-blue-600">Login</Text>

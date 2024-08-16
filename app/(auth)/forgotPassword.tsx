@@ -1,21 +1,20 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
-import { getAuth, sendPasswordResetEmail } from "firebase/auth";
-import { app } from "@/config/firebaseConfig";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/config/firebaseConfig";
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState("");
 
     const handleSubmit = async () => {
         try {
-            const auth = getAuth(app);
             const response = await sendPasswordResetEmail(
                 auth,
                 email,
             );
 
-            router.push("/");
+            router.replace("/");
         } catch (error) {
             const errorMessage = (error as Error).message;
             Alert.alert("Error in Forgot Password: ", errorMessage);
@@ -39,7 +38,7 @@ const ForgotPassword = () => {
                         Send
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => router.push("/register")}>
+                <TouchableOpacity onPress={() => router.replace("/register")}>
                     <Text className="font-medium text-center">
                         Don't have an account?{" "}
                         <Text className="text-blue-600">Register</Text>

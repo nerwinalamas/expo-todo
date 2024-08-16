@@ -3,8 +3,8 @@ import { router } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { app } from "@/config/firebaseConfig";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/config/firebaseConfig";
 
 const Login = () => {
     const { isSecurePassword, togglePasswordVisibility } =
@@ -15,14 +15,13 @@ const Login = () => {
 
     const handleSubmit = async () => {
         try {
-            const auth = getAuth(app);
             const response = await signInWithEmailAndPassword(
                 auth,
                 email,
                 password
             );
 
-            router.push("/todoList");
+            router.replace("/todoList");
         } catch (error) {
             const errorMessage = (error as Error).message;
             Alert.alert("Error in Login: ", errorMessage);
@@ -61,7 +60,7 @@ const Login = () => {
                     </TouchableOpacity>
                 </View>
                 <TouchableOpacity
-                    onPress={() => router.push("/forgotPassword")}
+                    onPress={() => router.replace("/forgotPassword")}
                 >
                     <Text className="font-medium">Forgot password?</Text>
                 </TouchableOpacity>
@@ -70,7 +69,7 @@ const Login = () => {
                         Login
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => router.push("/register")}>
+                <TouchableOpacity onPress={() => router.replace("/register")}>
                     <Text className="font-medium text-center">
                         Don't have an account?{" "}
                         <Text className="text-blue-600">Register</Text>
