@@ -1,28 +1,35 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import v4 from "react-native-uuid";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "@/config/firebaseConfig";
 
 const CreateTodo = () => {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
 
-    const handleSubmit = () => {
-      const newTodo = {
-          id: v4.v4(),
-          title,
-          description,
-          status: "Pending",
-          created_at: new Date().toLocaleDateString(),
-          updated_at: new Date().toLocaleDateString(),
-      };
+    const handleSubmit = async () => {
+        const user = auth.currentUser;
+        const userId = user ? user.uid : null;
 
-      console.log(newTodo)
+        try {
+            await addDoc(collection(db, "todos"), {
+                title,
+                description,
+                status: "Pending",
+                userId,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            });
+        } catch (e) {
+            Alert.alert("Error creating todo");
+        }
 
-      setTitle("");
-      setDescription("");
-  };
+        setTitle("");
+        setDescription("");
+        router.replace("/todoList");
+    };
 
     return (
         <SafeAreaView className="flex-1 justify-start items-center gap-3 p-4 bg-slate-200">
@@ -50,11 +57,11 @@ const CreateTodo = () => {
                     onPress={handleSubmit}
                     className="p-4 rounded-lg bg-yellow-400"
                 >
-                    <Text className="text-white text-center">Save</Text>
+                    <Text className="text-white text-center">Create</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    onPress={() => router.push("/")}
+                    onPress={() => router.replace("/todoList")}
                     className="p-4 rounded-lg bg-slate-300"
                 >
                     <Text className="text-center">Cancel</Text>
