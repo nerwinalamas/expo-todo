@@ -1,4 +1,7 @@
-import { DATA } from "@/data";
+import { getTodoById } from "@/api";
+import { Todo } from "@/types";
+import { FormatDate } from "@/utils/FormatDate";
+import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ellipsis } from "lucide-react-native";
 import { useState } from "react";
@@ -6,9 +9,18 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TodoItem = () => {
-    const { id } = useLocalSearchParams();
+    const { id: todoId } = useLocalSearchParams<{ id: string }>();
     const [isToggle, setIsToggle] = useState(false);
-    const item = DATA.find((item) => item.id === id);
+
+    const {
+        data: todoItem,
+        isLoading,
+        error,
+    } = useQuery<Todo | null>({
+        queryKey: ["todos", todoId],
+        queryFn: () => getTodoById(todoId),
+        enabled: !!todoId,
+    });
 
     const handleDelete = (todoId: string) => {
         console.log("Delete:", todoId);
@@ -18,15 +30,19 @@ const TodoItem = () => {
 
     return (
         <SafeAreaView className="p-4 flex-1 bg-slate-100">
-            {item ? (
+            {isLoading ? (
+                <Text>Loading...</Text>
+            ) : error ? (
+                <Text>Error: {error.message}</Text>
+            ) : todoItem ? (
                 <View>
                     <View className="flex flex-row justify-between items-center border-b border-slate-500 pb-2">
                         <View className="space-y-1">
                             <Text className="text-3xl font-bold">
-                                {item.title}
+                                {todoItem.title}
                             </Text>
                             <Text className="text-sm font-bold text-slate-600">
-                                {item.created_at} - {item.status}
+                                {FormatDate(todoItem?.createdAt)} - {todoItem.status}
                             </Text>
                         </View>
                         <View className="relative">
@@ -45,7 +61,9 @@ const TodoItem = () => {
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        onPress={() => handleDelete(item.id)}
+                                        onPress={() =>
+                                            handleDelete(todoItem.id)
+                                        }
                                     >
                                         <Text className="text-red-500 text-xl">
                                             Delete
@@ -55,10 +73,10 @@ const TodoItem = () => {
                             )}
                         </View>
                     </View>
-                    <Text className="mt-5">{item.description}</Text>
+                    <Text className="mt-5">{todoItem.description}</Text>
                 </View>
             ) : (
-                <Text>Item not found</Text>
+                <Text>Todo not found</Text>
             )}
         </SafeAreaView>
     );
