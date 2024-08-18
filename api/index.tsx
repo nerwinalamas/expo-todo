@@ -1,30 +1,64 @@
-import { db } from "@/config/firebaseConfig";
-import { Todo } from "@/types";
-import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import { todosCollection } from "@/config/firebaseConfig";
+import { Todo, UpdateTodo } from "@/types";
+import {
+    doc,
+    getDoc,
+    getDocs,
+    query,
+    updateDoc,
+    where,
+} from "firebase/firestore";
 
 export const getTodos = async (userId: string, searchTerm?: string) => {
-    let q = query(collection(db, "todos"), where("userId", "==", userId));
+    try {
+        let q = query(todosCollection, where("userId", "==", userId));
 
-    if (searchTerm) {
-        q = query(q, where("title", ">=", searchTerm), where("title", "<=", searchTerm + "\uf8ff"));
+        if (searchTerm) {
+            q = query(
+                q,
+                where("title", ">=", searchTerm),
+                where("title", "<=", searchTerm + "\uf8ff")
+            );
+        }
+
+        const todoData = await getDocs(q);
+        const todos = todoData.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        })) as Todo[];
+
+        return todos;
+    } catch (error) {
+        console.error("Error getting todos:", error);
+        throw new Error("Failed to get todos.");
     }
-
-    const querySnapshot = await getDocs(q);
-    const todos = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as Todo[];
-
-    return todos;
 };
 
-export const getTodoById = async (todoId: string): Promise<Todo | null> => {
-    const todoDoc = doc(db, "todos", todoId);
-    const docSnap = await getDoc(todoDoc);
+export const getTodoById = async (todoId: string) => {
+    try {
+        const todoItem = doc(todosCollection, todoId);
+        const todoData = await getDoc(todoItem);
 
-    if (docSnap.exists()) {
-        return { id: docSnap.id, ...docSnap.data() } as Todo;
-    } else {
-        return null;
+        if (todoData.exists()) {
+            return { id: todoData.id, ...todoData.data() } as Todo;
+        } else {
+            return null;
+        }
+    } catch (error) {
+        console.error("Error getting todo:", error);
+        throw new Error("Failed to get todo.");
+    }
+};
+
+export const updateTodoById = async (
+    todoId: string,
+    updatedTodo: UpdateTodo
+) => {
+    try {
+        const todoData = doc(todosCollection, todoId);
+        await updateDoc(todoData, updatedTodo);
+    } catch (error) {
+        console.error("Error updating todo:", error);
+        throw new Error("Failed to update todo.");
     }
 };
