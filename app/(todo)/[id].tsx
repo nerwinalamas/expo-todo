@@ -1,8 +1,10 @@
 import { getTodoById } from "@/api";
+import { todosCollection } from "@/config/firebaseConfig";
 import { Todo } from "@/types";
 import { FormatDate } from "@/utils/FormatDate";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
+import { deleteDoc, doc } from "firebase/firestore";
 import { Ellipsis } from "lucide-react-native";
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -22,10 +24,15 @@ const TodoItem = () => {
         enabled: !!todoId,
     });
 
-    const handleDelete = (todoId: string) => {
-        console.log("Delete:", todoId);
-        setIsToggle(false);
-        router.replace("/todoList");
+    const handleDelete = async (itemId: string) => {
+        try {
+            const todoDocRef = doc(todosCollection, itemId);
+            await deleteDoc(todoDocRef);
+            setIsToggle(false);
+            router.replace("/todoList");
+        } catch (error) {
+            console.error("Error deleting todo: ", error);
+        }
     };
 
     return (
@@ -42,7 +49,8 @@ const TodoItem = () => {
                                 {todoItem.title}
                             </Text>
                             <Text className="text-sm font-bold text-slate-600">
-                                {FormatDate(todoItem?.createdAt)} - {todoItem.status}
+                                {FormatDate(todoItem?.createdAt)} -{" "}
+                                {todoItem.status}
                             </Text>
                         </View>
                         <View className="relative">
@@ -54,7 +62,12 @@ const TodoItem = () => {
                             {isToggle && (
                                 <View className="absolute top-7 right-5 w-32 space-y-6 p-4 bg-slate-900 border rounded-md shadow-lg z-10">
                                     <TouchableOpacity
-                                        onPress={() => router.push("/editTodo")}
+                                        onPress={() =>
+                                            router.push({
+                                                pathname: "/editTodo",
+                                                params: { id: todoItem.id },
+                                            })
+                                        }
                                     >
                                         <Text className="text-white text-xl">
                                             Edit
