@@ -12,3 +12,10 @@ export type TodoDate = {
     seconds: number;
     nanoseconds: number;
 };
+
+export type UpdateTodo = {
+    title: string;
+    description: string;
+    status: string;
+    updatedAt: TodoDate;
+};
