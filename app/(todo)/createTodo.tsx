@@ -2,8 +2,8 @@ import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "@/config/firebaseConfig";
+import { addDoc, Timestamp } from "firebase/firestore";
+import { auth, todosCollection } from "@/config/firebaseConfig";
 
 const CreateTodo = () => {
     const [title, setTitle] = useState("");
@@ -14,21 +14,24 @@ const CreateTodo = () => {
         const userId = user ? user.uid : null;
 
         try {
-            await addDoc(collection(db, "todos"), {
+            const newTodo = {
                 title,
                 description,
                 status: "Pending",
                 userId,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
-        } catch (e) {
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+            };
+
+            await addDoc(todosCollection, newTodo);
+            router.replace("/todoList");
+        } catch (error) {
+            console.error("Error creating todo: ", error);
             Alert.alert("Error creating todo");
         }
 
         setTitle("");
         setDescription("");
-        router.replace("/todoList");
     };
 
     return (
