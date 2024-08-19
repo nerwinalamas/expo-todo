@@ -1,19 +1,45 @@
 import { useTogglePasswordVisibility } from "@/hooks/useTogglePasswordVisibility";
 import { router } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
-import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/config/firebaseConfig";
+import { FirebaseError } from "firebase/app";
+import { loginSchema } from "@/utils/schema";
+import { InputError } from "@/types";
+import useAuth from "@/hooks/useAuth";
 
 const Login = () => {
     const { isSecurePassword, togglePasswordVisibility } =
         useTogglePasswordVisibility();
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const {
+        email,
+        password,
+        errors,
+        setErrors,
+        handleInputChange,
+    } = useAuth();
 
     const handleSubmit = async () => {
+        const validation = loginSchema.safeParse({ email, password });
+
+        if (!validation.success) {
+            const newErrors: InputError = {};
+            validation.error.errors.forEach((error) => {
+                if (error.path.includes("email")) {
+                    newErrors.email = error.message;
+                }
+                if (error.path.includes("password")) {
+                    newErrors.password = error.message;
+                }
+            });
+            setErrors(newErrors);
+            return;
+        }
+
+        setErrors({});
+
         try {
             const response = await signInWithEmailAndPassword(
                 auth,
@@ -23,8 +49,28 @@ const Login = () => {
 
             router.replace("/todoList");
         } catch (error) {
-            const errorMessage = (error as Error).message;
-            Alert.alert("Error in Login: ", errorMessage);
+            console.error("Error in logging in: ", error);
+
+            if (error instanceof Error) {
+                const firebaseError = error as FirebaseError;
+                switch (firebaseError.code) {
+                    case "auth/invalid-credential":
+                        setErrors({ firebaseError: "Invalid credential" });
+                        break;
+                    case "auth/network-request-failed":
+                        setErrors({
+                            firebaseError:
+                                "Network error. Please try again later.",
+                        });
+                        break;
+                    default:
+                        setErrors({
+                            firebaseError:
+                                "An error occurred. Please try again.",
+                        });
+                        break;
+                }
+            }
         }
     };
 
@@ -37,34 +83,50 @@ const Login = () => {
                 <TextInput
                     placeholder="Email"
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={(value) => handleInputChange("email", value)}
                     className="grow p-3 rounded-md bg-slate-100"
                 />
+                {errors.email && (
+                    <Text className="text-red-500">{errors.email}</Text>
+                )}
                 <View className="relative">
                     <TextInput
                         secureTextEntry={isSecurePassword}
                         placeholder="Password"
                         value={password}
-                        onChangeText={setPassword}
+                        onChangeText={(value) =>
+                            handleInputChange("password", value)
+                        }
                         className="grow py-3 pl-3 pr-10 rounded-md bg-slate-100"
                     />
-                    <TouchableOpacity
-                        onPress={togglePasswordVisibility}
-                        className="absolute right-3 top-3.5"
-                    >
-                        {isSecurePassword ? (
-                            <EyeOff size={25} className="text-slate-400" />
-                        ) : (
-                            <Eye size={25} className="text-slate-400" />
-                        )}
-                    </TouchableOpacity>
+                    {password && (
+                        <TouchableOpacity
+                            onPress={togglePasswordVisibility}
+                            className="absolute right-3 top-3.5"
+                        >
+                            {isSecurePassword ? (
+                                <EyeOff size={25} className="text-slate-400" />
+                            ) : (
+                                <Eye size={25} className="text-slate-400" />
+                            )}
+                        </TouchableOpacity>
+                    )}
                 </View>
+                {errors.password && (
+                    <Text className="text-red-500">{errors.password}</Text>
+                )}
+                {errors.firebaseError && (
+                    <Text className="text-red-500">{errors.firebaseError}</Text>
+                )}
                 <TouchableOpacity
                     onPress={() => router.replace("/forgotPassword")}
                 >
                     <Text className="font-medium">Forgot password?</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleSubmit} className="p-4 rounded-lg bg-yellow-400">
+                <TouchableOpacity
+                    onPress={handleSubmit}
+                    className="p-4 rounded-lg bg-yellow-400"
+                >
                     <Text className="text-white font-semibold text-center">
                         Login
                     </Text>
