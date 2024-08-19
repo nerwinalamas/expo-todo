@@ -1,23 +1,72 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/config/firebaseConfig";
+import { forgotPasswordSchema } from "@/utils/schema";
+import { InputError } from "@/types";
+import { FirebaseError } from "firebase/app";
+import useAuth from "@/hooks/useAuth";
 
 const ForgotPassword = () => {
-    const [email, setEmail] = useState("");
+    const [successMessage, setSuccessMessage] = useState<string>("");
+    const { email, errors, setErrors, handleInputChange } = useAuth();
 
     const handleSubmit = async () => {
-        try {
-            const response = await sendPasswordResetEmail(
-                auth,
-                email,
-            );
+        const validation = forgotPasswordSchema.safeParse({
+            email,
+        });
 
-            router.replace("/");
+        if (!validation.success) {
+            const newErrors: InputError = {};
+            validation.error.errors.forEach((error) => {
+                if (error.path.includes("email")) {
+                    newErrors.email = error.message;
+                }
+            });
+            setErrors(newErrors);
+            return;
+        }
+
+        setErrors({});
+        setSuccessMessage("");
+
+        try {
+            const response = await sendPasswordResetEmail(auth, email);
+            setSuccessMessage(
+                "A password reset link has been sent to your email."
+            );
+            setTimeout(() => {
+                router.replace("/");
+            }, 5000);
         } catch (error) {
-            const errorMessage = (error as Error).message;
-            Alert.alert("Error in Forgot Password: ", errorMessage);
+            console.error("Error in forgot password: ", error);
+
+            if (error instanceof Error) {
+                const firebaseError = error as FirebaseError;
+                switch (firebaseError.code) {
+                    case "auth/invalid-credential":
+                        setErrors({ firebaseError: "Invalid credential" });
+                        break;
+                    case "auth/network-request-failed":
+                        setErrors({
+                            firebaseError:
+                                "Network error. Please try again later.",
+                        });
+                        break;
+                    default:
+                        setErrors({
+                            firebaseError:
+                                "An error occurred. Please try again.",
+                        });
+                        break;
+                }
+            } else {
+                setErrors({
+                    firebaseError:
+                        "An unknown error occurred. Please try again.",
+                });
+            }
         }
     };
 
@@ -30,10 +79,24 @@ const ForgotPassword = () => {
                 <TextInput
                     placeholder="Email"
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={(value) => handleInputChange("email", value)}
                     className="grow p-3 rounded-md bg-slate-100"
                 />
-                <TouchableOpacity onPress={handleSubmit} className="p-4 rounded-lg bg-yellow-400">
+                {errors.email && (
+                    <Text className="text-red-500">{errors.email}</Text>
+                )}
+                {errors.firebaseError && (
+                    <Text className="text-red-500">{errors.firebaseError}</Text>
+                )}
+                {successMessage && (
+                    <Text className="text-green-500 font-semibold">
+                        {successMessage}
+                    </Text>
+                )}
+                <TouchableOpacity
+                    onPress={handleSubmit}
+                    className="p-4 rounded-lg bg-yellow-400"
+                >
                     <Text className="text-white font-semibold text-center">
                         Send
                     </Text>
