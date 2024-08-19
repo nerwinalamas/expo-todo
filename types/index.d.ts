@@ -19,3 +19,10 @@ export type UpdateTodo = {
     status: string;
     updatedAt: TodoDate;
 };
+
+export type InputError = {
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    firebaseError?: string;
+};
