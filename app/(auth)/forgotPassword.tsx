@@ -9,8 +9,9 @@ import { FirebaseError } from "firebase/app";
 import useAuth from "@/hooks/useAuth";
 
 const ForgotPassword = () => {
-    const [successMessage, setSuccessMessage] = useState<string>("");
+    const [successMessage, setSuccessMessage] = useState("");
     const { email, errors, setErrors, handleInputChange } = useAuth();
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async () => {
         const validation = forgotPasswordSchema.safeParse({
@@ -30,6 +31,7 @@ const ForgotPassword = () => {
 
         setErrors({});
         setSuccessMessage("");
+        setLoading(true);
 
         try {
             const response = await sendPasswordResetEmail(auth, email);
@@ -67,6 +69,8 @@ const ForgotPassword = () => {
                         "An unknown error occurred. Please try again.",
                 });
             }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -96,12 +100,16 @@ const ForgotPassword = () => {
                 <TouchableOpacity
                     onPress={handleSubmit}
                     className="p-4 rounded-lg bg-yellow-400"
+                    disabled={loading}
                 >
                     <Text className="text-white font-semibold text-center">
-                        Send
+                        {loading ? "Sending..." : "Send"}
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => router.replace("/register")}>
+                <TouchableOpacity
+                    onPress={() => router.replace("/register")}
+                    disabled={loading}
+                >
                     <Text className="font-medium text-center">
                         Don't have an account?{" "}
                         <Text className="text-blue-600">Register</Text>
