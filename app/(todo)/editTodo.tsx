@@ -1,5 +1,6 @@
 import { getTodoById, updateTodoById } from "@/api";
-import { Todo } from "@/types";
+import { InputError, Todo, TodoTitle } from "@/types";
+import { todoSchema } from "@/utils/schema";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { Timestamp } from "firebase/firestore";
@@ -15,6 +16,8 @@ const EditTodo = () => {
     const [editDescription, setEditDescription] = useState("");
     const [editStatus, setEditStatus] = useState("");
     const { id: todoId } = useLocalSearchParams<{ id: string }>();
+    const [errors, setErrors] = useState<TodoTitle>({});
+    const [loading, setLoading] = useState(false);
 
     const {
         data: todoItem,
@@ -34,15 +37,36 @@ const EditTodo = () => {
         }
     }, [todoItem]);
 
+    const handleTitleChange = (value: string) => {
+        setEditTitle(value);
+
+        if (errors.title) {
+            setErrors((prev) => ({ ...prev, title: "" }));
+        }
+    };
+
     const handleStatus = (status: string) => {
         setEditStatus(status);
     };
 
     const handleSubmit = async () => {
-        if (!editTitle || !editDescription || !editStatus) {
-            Alert.alert("Please fill out all fields.");
+        const validation = todoSchema.safeParse({
+            title: editTitle,
+            description: editDescription,
+        });
+
+        if (!validation.success) {
+            const newErrors: InputError = {};
+            validation.error.errors.forEach((error) => {
+                if (error.path.includes("title")) {
+                    newErrors.title = error.message;
+                }
+            });
+            setErrors(newErrors);
             return;
         }
+
+        setLoading(true);
 
         try {
             const updatedTodo = {
@@ -57,6 +81,9 @@ const EditTodo = () => {
         } catch (error) {
             console.error("Error updating todo: ", error);
             Alert.alert("Error updating todo");
+        } finally {
+            setErrors({});
+            setLoading(false);
         }
     };
 
@@ -81,9 +108,12 @@ const EditTodo = () => {
                 <TextInput
                     placeholder="Enter Title"
                     value={editTitle}
-                    onChangeText={(newText) => setEditTitle(newText)}
+                    onChangeText={handleTitleChange}
                     className="grow p-3 rounded-md bg-slate-100"
                 />
+                {errors.title && (
+                    <Text className="text-red-500">{errors.title}</Text>
+                )}
             </View>
             <View className="w-full space-y-1">
                 <Text>Description:</Text>
@@ -117,13 +147,17 @@ const EditTodo = () => {
                 <TouchableOpacity
                     onPress={handleSubmit}
                     className="p-4 rounded-lg bg-yellow-400"
+                    disabled={loading}
                 >
-                    <Text className="text-white text-center">Save</Text>
+                    <Text className="text-white text-center">
+                        {loading ? "Loading..." : "Save"}
+                    </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     onPress={() => router.replace("/todoList")}
                     className="p-4 rounded-lg bg-slate-300"
+                    disabled={loading}
                 >
                     <Text className="text-center">Cancel</Text>
                 </TouchableOpacity>
