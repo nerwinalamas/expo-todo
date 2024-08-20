@@ -25,4 +25,9 @@ export type InputError = {
     password?: string;
     confirmPassword?: string;
     firebaseError?: string;
+    title?: string;
+};
+
+export type TodoTitle = {
+    title?: string;
 };
