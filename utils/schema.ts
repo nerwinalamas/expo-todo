@@ -37,3 +37,8 @@ export const forgotPasswordSchema = z.object({
         .min(1, "Email is required")
         .email("Invalid email address"),
 });
+
+export const todoSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().optional(),
+});
