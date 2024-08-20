@@ -86,7 +86,7 @@ const TodoItem = () => {
                             )}
                         </View>
                     </View>
-                    <Text className="mt-5">{todoItem.description}</Text>
+                    <Text className="mt-5">{todoItem.description || "No description"}</Text>
                 </View>
             ) : (
                 <Text>Todo not found</Text>
