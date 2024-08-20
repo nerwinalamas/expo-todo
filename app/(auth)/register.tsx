@@ -8,6 +8,7 @@ import { InputError } from "@/types";
 import { registerSchema } from "@/utils/schema";
 import { FirebaseError } from "firebase/app";
 import useAuth from "@/hooks/useAuth";
+import { useState } from "react";
 
 const Register = () => {
     const {
@@ -16,6 +17,7 @@ const Register = () => {
         togglePasswordVisibility,
         toggleConfirmPasswordVisibility,
     } = useTogglePasswordVisibility();
+    const [loading, setLoading] = useState(false);
 
     const {
         email,
@@ -51,6 +53,7 @@ const Register = () => {
         }
 
         setErrors({});
+        setLoading(true);
 
         try {
             const response = await createUserWithEmailAndPassword(
@@ -84,6 +87,8 @@ const Register = () => {
                         break;
                 }
             }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -162,12 +167,16 @@ const Register = () => {
                 <TouchableOpacity
                     onPress={handleSubmit}
                     className="p-4 rounded-lg bg-yellow-400"
+                    disabled={loading}
                 >
                     <Text className="text-white font-semibold text-center">
-                        Register
+                        {loading ? "Loading..." : "Register"}
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => router.replace("/")}>
+                <TouchableOpacity
+                    onPress={() => router.replace("/")}
+                    disabled={loading}
+                >
                     <Text className="font-medium text-center">
                         Already have an account?{" "}
                         <Text className="text-blue-600">Login</Text>

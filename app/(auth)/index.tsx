@@ -8,18 +8,14 @@ import { FirebaseError } from "firebase/app";
 import { loginSchema } from "@/utils/schema";
 import { InputError } from "@/types";
 import useAuth from "@/hooks/useAuth";
+import { useState } from "react";
 
 const Login = () => {
     const { isSecurePassword, togglePasswordVisibility } =
         useTogglePasswordVisibility();
+    const [loading, setLoading] = useState(false);
 
-    const {
-        email,
-        password,
-        errors,
-        setErrors,
-        handleInputChange,
-    } = useAuth();
+    const { email, password, errors, setErrors, handleInputChange } = useAuth();
 
     const handleSubmit = async () => {
         const validation = loginSchema.safeParse({ email, password });
@@ -39,6 +35,7 @@ const Login = () => {
         }
 
         setErrors({});
+        setLoading(true);
 
         try {
             const response = await signInWithEmailAndPassword(
@@ -71,6 +68,8 @@ const Login = () => {
                         break;
                 }
             }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -120,18 +119,23 @@ const Login = () => {
                 )}
                 <TouchableOpacity
                     onPress={() => router.replace("/forgotPassword")}
+                    disabled={loading}
                 >
                     <Text className="font-medium">Forgot password?</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={handleSubmit}
                     className="p-4 rounded-lg bg-yellow-400"
+                    disabled={loading}
                 >
                     <Text className="text-white font-semibold text-center">
-                        Login
+                        {loading ? "Loading..." : "Login"}
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => router.replace("/register")}>
+                <TouchableOpacity
+                    onPress={() => router.replace("/register")}
+                    disabled={loading}
+                >
                     <Text className="font-medium text-center">
                         Don't have an account?{" "}
                         <Text className="text-blue-600">Register</Text>
